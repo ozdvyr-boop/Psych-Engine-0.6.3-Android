@@ -7,19 +7,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Android NDK
-        uses: nndixon/setup-android-ndk@v1
-        with:
-          ndk-version: r21e
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+
       - name: Setup Haxe
         uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.2.5
+
       - name: Install Libraries
         run: |
           haxelib setup ~/haxelib
@@ -34,15 +33,25 @@ jobs:
           haxelib git polymod https://github.com/larsiusprime/polymod.git
           haxelib git extension-androidtools https://github.com/M.A.J.W.A.D/extension-androidtools.git
           haxelib git linc_luajit https://github.com/SiroxDev/linc_luajit.git
+
       - name: Configure Lime
         run: |
           haxelib run lime setup
-          haxelib run lime setup android
+          haxelib run lime setup android --no-install
+          # Esto le dice a Lime dónde está el SDK y NDK que GitHub ya trae preinstalados
+          echo "y" | haxelib run lime setup android
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+          ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk-bundle
+
       - name: Build APK
         run: haxelib run lime build android -release
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+          ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk-bundle
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PsychEngine-Android
           path: export/release/android/bin/app/build/outputs/apk/release/*.apk
-          
